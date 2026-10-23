@@ -1,0 +1,6 @@
+{
+  "name": "Fazenda dos Corações — Pedido de Namoro 3D Pixel Art",
+  "description": "Um cenário 3D interativo em estética retrô pixel art com fazenda acolhedora, campo de flores, corações saltitantes e uma carta voadora com pedido de namoro.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
