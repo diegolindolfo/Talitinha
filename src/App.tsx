@@ -8,6 +8,7 @@ import {
   LetterContent,
   getNextSceneId,
   getPrevSceneId,
+  parseLetterFromQueryParams,
 } from './utils/sceneState';
 import { soundEngine } from './utils/soundEffects';
 import { RetroFarmCanvas } from './components/RetroFarmCanvas';
@@ -15,10 +16,20 @@ import { BottomDock } from './components/BottomDock';
 import { LetterModal } from './components/LetterModal';
 
 export default function App() {
-  const [activeScene, setActiveScene] = useState<SceneId>('farm');
+  const [activeScene, setActiveScene] = useState<SceneId>(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('autostart') === '1' || params.get('to')) {
+        return 'flying_letter';
+      }
+    }
+    return 'farm';
+  });
   const [timeOfDay, setTimeOfDay] = useState<TimeOfDayId>('golden_sunset');
-  const [letterContent, setLetterContent] = useState<LetterContent>(
-    DEFAULT_LETTER_CONTENT
+  const [letterContent, setLetterContent] = useState<LetterContent>(() =>
+    typeof window !== 'undefined'
+      ? parseLetterFromQueryParams(window.location.search, DEFAULT_LETTER_CONTENT)
+      : DEFAULT_LETTER_CONTENT
   );
   const [proposalAccepted, setProposalAccepted] = useState<boolean>(false);
   const [isLetterModalOpen, setIsLetterModalOpen] = useState<boolean>(false);
@@ -118,45 +129,49 @@ export default function App() {
         onOpenLetterModal={handleOpenLetterModal}
       />
 
-      {/* Minimal Top-Left Story & Scene Card (Leaves Center 3D Viewport 100% Unobstructed) */}
+      {/* Minimal Top-Left Story & Scene Card (Compact on Mobile to respect 15% Sticky Cap) */}
       {!isDockCollapsed && (
         <section
           aria-label="História da Cena Atual"
-          className="fixed top-4 left-4 z-10 max-w-md rounded-xl border-2 border-[#5c3d46] px-4 py-3.5 text-[#fff8f0] shadow-xl pointer-events-auto"
+          className="fixed top-3 left-3 right-3 sm:right-auto sm:top-4 sm:left-4 z-10 sm:max-w-md rounded-xl border-2 border-[#5c3d46] px-3.5 py-2.5 sm:px-4 sm:py-3.5 text-[#fff8f0] shadow-xl pointer-events-auto flex sm:block items-center justify-between gap-3"
           style={{ backgroundColor: 'rgba(33, 23, 36, 0.92)' }}
         >
-          <div className="flex items-center gap-2 text-xs font-medium text-[#ffb3c6]">
-            <span>Fazenda dos Corações</span>
-            <span aria-hidden="true">·</span>
-            <span>Cena {currentPreset.index} de 4</span>
-            {proposalAccepted && (
-              <>
-                <span aria-hidden="true">·</span>
-                <span className="text-[#ffbe0b] font-semibold">
-                  Pedido Aceito ♥
-                </span>
-              </>
-            )}
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-medium text-[#ffb3c6]">
+              <span className="truncate">Fazenda dos Corações</span>
+              <span aria-hidden="true">·</span>
+              <span className="whitespace-nowrap shrink-0">
+                Cena {currentPreset.index}/4
+              </span>
+              {proposalAccepted && (
+                <>
+                  <span aria-hidden="true">·</span>
+                  <span className="text-[#ffbe0b] font-semibold whitespace-nowrap shrink-0">
+                    Pedido Aceito ♥
+                  </span>
+                </>
+              )}
+            </div>
+
+            <h1 className="mt-0.5 sm:mt-1 text-base sm:text-xl font-bold tracking-tight text-white font-display truncate">
+              {currentPreset.label}
+            </h1>
+
+            <p className="hidden sm:block mt-1 text-sm text-[#e6d5cf] leading-relaxed">
+              {currentPreset.poeticLine}
+            </p>
           </div>
 
-          <h1 className="mt-1 text-lg sm:text-xl font-bold tracking-tight text-white font-display">
-            {currentPreset.label}
-          </h1>
-
-          <p className="mt-1 text-xs sm:text-sm text-[#e6d5cf] leading-relaxed">
-            {currentPreset.poeticLine}
-          </p>
-
-          <div className="mt-3 flex flex-wrap items-center gap-2.5">
+          <div className="sm:mt-3 flex items-center gap-2 shrink-0">
             {activeScene !== 'proposal' ? (
               <button
                 type="button"
                 onClick={handleNextScene}
-                className="pixel-button inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg bg-[#d92644] text-white hover:bg-[#b81d38] cursor-pointer whitespace-nowrap shrink-0"
+                className="pixel-button inline-flex items-center gap-1.5 px-3 py-2 sm:px-3.5 sm:py-1.5 min-h-[38px] sm:min-h-0 text-xs font-bold rounded-lg bg-[#d92644] text-white hover:bg-[#b81d38] cursor-pointer whitespace-nowrap shrink-0"
               >
                 <span>
                   {activeScene === 'flying_letter'
-                    ? 'Abrir a Carta Voando'
+                    ? 'Abrir Carta'
                     : 'Próxima Cena'}
                 </span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -165,10 +180,10 @@ export default function App() {
               <button
                 type="button"
                 onClick={handleOpenLetterModal}
-                className="pixel-button inline-flex items-center gap-1.5 px-4 py-1.5 text-xs font-bold rounded-lg bg-[#d92644] text-white hover:bg-[#b81d38] cursor-pointer whitespace-nowrap shrink-0"
+                className="pixel-button inline-flex items-center gap-1.5 px-3.5 py-2 sm:px-4 sm:py-1.5 min-h-[38px] sm:min-h-0 text-xs font-bold rounded-lg bg-[#d92644] text-white hover:bg-[#b81d38] cursor-pointer whitespace-nowrap shrink-0"
               >
                 <MailOpen className="w-3.5 h-3.5" />
-                <span>Abrir Carta: "{letterContent.headline}"</span>
+                <span>Abrir Carta</span>
               </button>
             )}
 
@@ -176,7 +191,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={handleOpenLetterModal}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-[#5c3d46] bg-[#2e2032] text-[#ffebd6] hover:bg-[#3d2b42] transition-colors cursor-pointer whitespace-nowrap shrink-0"
+                className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border border-[#5c3d46] bg-[#2e2032] text-[#ffebd6] hover:bg-[#3d2b42] transition-colors cursor-pointer whitespace-nowrap shrink-0"
               >
                 <Heart className="w-3.5 h-3.5 text-[#ff4d6d] fill-[#ff4d6d]" />
                 <span>Ir para o Pedido</span>

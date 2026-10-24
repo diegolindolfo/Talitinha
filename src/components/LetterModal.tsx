@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Heart, Sparkles, Edit3, Check, X, RotateCcw } from 'lucide-react';
+import { Heart, Sparkles, Edit3, Check, X, RotateCcw, Share2 } from 'lucide-react';
 import {
   LetterContent,
   validateLetterContent,
   DEFAULT_LETTER_CONTENT,
+  encodeLetterToQueryParams,
 } from '../utils/sceneState';
 
 interface LetterModalProps {
@@ -29,6 +30,7 @@ export const LetterModal: React.FC<LetterModalProps> = ({
   const [draft, setDraft] = useState<LetterContent>(letterContent);
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [playfulPromptIndex, setPlayfulPromptIndex] = useState(0);
+  const [shareCopied, setShareCopied] = useState(false);
 
   const playfulPrompts = [
     'Ainda pensando com carinho?',
@@ -44,10 +46,36 @@ export const LetterModal: React.FC<LetterModalProps> = ({
     if (isOpen) {
       setIsEditing(isEditingInitial);
       setErrors({});
+      setShareCopied(false);
     }
   }, [isOpen, isEditingInitial]);
 
   if (!isOpen) return null;
+
+  const handleShareLink = async () => {
+    const query = encodeLetterToQueryParams(letterContent);
+    const shareUrl = `${window.location.origin}${window.location.pathname}?${query}`;
+    window.history.replaceState(null, '', `?${query}`);
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: `${letterContent.headline} — Para ${letterContent.recipientName}`,
+          text: `Uma carta especial esperando por você na Fazenda dos Corações!`,
+          url: shareUrl,
+        });
+        return;
+      } catch {
+        // Fallback to clipboard copy if user cancels share sheet
+      }
+    }
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(shareUrl).catch(() => {});
+    }
+    setShareCopied(true);
+    window.setTimeout(() => setShareCopied(false), 3000);
+  };
 
   const handleSaveSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,13 +85,16 @@ export const LetterModal: React.FC<LetterModalProps> = ({
       return;
     }
     setErrors({});
-    onSaveLetterContent({
+    const updated: LetterContent = {
       recipientName: draft.recipientName.trim(),
       senderName: draft.senderName.trim(),
       headline: draft.headline.trim(),
       bodyText: draft.bodyText.trim(),
       postscript: draft.postscript.trim(),
-    });
+    };
+    onSaveLetterContent(updated);
+    const query = encodeLetterToQueryParams(updated);
+    window.history.replaceState(null, '', `?${query}`);
     setIsEditing(false);
   };
 
@@ -80,33 +111,42 @@ export const LetterModal: React.FC<LetterModalProps> = ({
       aria-modal="true"
       aria-labelledby="letter-modal-title"
     >
-      <div className="relative w-full max-w-xl rounded-xl border-4 border-[#6e3b3b] bg-[#fff7eb] text-[#3d251e] p-6 sm:p-8 pixel-card">
+      <div className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-xl border-4 border-[#6e3b3b] bg-[#fff7eb] text-[#3d251e] p-4 sm:p-8 pixel-card">
         {/* Top Corner Actions */}
-        <div className="flex items-center justify-between gap-4 pb-4 border-b border-[#e8d5be]">
-          <div className="flex items-center gap-2 text-xs font-medium text-[#8c584c]">
-            <span>Carta da Fazenda Pixel Art</span>
-            <span aria-hidden="true">·</span>
-            <span>Selo Real de Coração</span>
+        <div className="flex flex-wrap items-center justify-between gap-2 pb-3 sm:pb-4 border-b border-[#e8d5be]">
+          <div className="flex items-center gap-1.5 text-xs font-medium text-[#8c584c] min-w-0">
+            <span className="truncate">Carta Pixel Art</span>
+            <span aria-hidden="true" className="hidden sm:inline">·</span>
+            <span className="hidden sm:inline">Selo Real de Coração</span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 ml-auto">
+            <button
+              type="button"
+              onClick={handleShareLink}
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 min-h-[36px] text-xs font-semibold rounded-md border border-[#d5b895] bg-[#f7e8d0] text-[#59372c] hover:bg-[#eed7b5] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+            >
+              <Share2 className="w-3.5 h-3.5 shrink-0" />
+              <span>{shareCopied ? 'Copiado!' : 'Compartilhar'}</span>
+            </button>
+
             <button
               type="button"
               onClick={() => {
                 setIsEditing(!isEditing);
                 setErrors({});
               }}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-md border border-[#d5b895] bg-[#f7e8d0] text-[#59372c] hover:bg-[#eed7b5] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+              className="inline-flex items-center gap-1 px-2.5 py-1.5 min-h-[36px] text-xs font-semibold rounded-md border border-[#d5b895] bg-[#f7e8d0] text-[#59372c] hover:bg-[#eed7b5] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
             >
-              <Edit3 className="w-3.5 h-3.5" />
-              <span>{isEditing ? 'Ver Carta' : 'Personalizar Carta'}</span>
+              <Edit3 className="w-3.5 h-3.5 shrink-0" />
+              <span>{isEditing ? 'Ver Carta' : 'Personalizar'}</span>
             </button>
 
             <button
               type="button"
               onClick={onClose}
               aria-label="Fechar carta"
-              className="inline-flex items-center justify-center w-8 h-8 rounded-md border border-[#d5b895] bg-[#f7e8d0] text-[#59372c] hover:bg-[#eed7b5] transition-colors cursor-pointer"
+              className="inline-flex items-center justify-center w-9 h-9 rounded-md border border-[#d5b895] bg-[#f7e8d0] text-[#59372c] hover:bg-[#eed7b5] transition-colors cursor-pointer shrink-0"
             >
               <X className="w-4 h-4" />
             </button>

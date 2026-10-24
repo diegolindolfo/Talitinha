@@ -347,3 +347,85 @@ export function groundHeightAt(x: number, z: number): number {
 
   return gentleUndulation + streamDip + outerHills;
 }
+
+/**
+ * Adjusts camera position and FOV for narrow portrait mobile screens (aspect < 1)
+ * so wide 3D subjects (like the flying love letter and barn) never clip horizontally.
+ */
+export function getResponsiveCameraPreset(
+  preset: ScenePreset,
+  aspect: number
+): { cameraPos: Vector3Tuple; cameraTarget: Vector3Tuple; fov: number } {
+  if (!Number.isFinite(aspect) || aspect >= 1) {
+    return {
+      cameraPos: { ...preset.cameraPos },
+      cameraTarget: { ...preset.cameraTarget },
+      fov: preset.fov,
+    };
+  }
+
+  // Portrait mobile factor (e.g. 390/844 = 0.46 -> factor ~ 1.45)
+  const clampedAspect = Math.max(0.4, aspect);
+  const pullBackFactor = Math.min(1.65, 1 / Math.pow(clampedAspect, 0.55));
+
+  const dx = preset.cameraPos.x - preset.cameraTarget.x;
+  const dy = preset.cameraPos.y - preset.cameraTarget.y;
+  const dz = preset.cameraPos.z - preset.cameraTarget.z;
+
+  return {
+    cameraPos: {
+      x: preset.cameraTarget.x + dx * pullBackFactor,
+      y: preset.cameraTarget.y + dy * (1 + (pullBackFactor - 1) * 0.45),
+      z: preset.cameraTarget.z + dz * pullBackFactor,
+    },
+    cameraTarget: { ...preset.cameraTarget },
+    fov: Math.min(56, preset.fov * (1 + (1 - clampedAspect) * 0.35)),
+  };
+}
+
+/**
+ * Encodes customized letter content into URL search parameters for easy sharing on mobile (WhatsApp/Direct).
+ */
+export function encodeLetterToQueryParams(content: LetterContent): string {
+  const params = new URLSearchParams();
+  params.set('to', content.recipientName.trim());
+  params.set('from', content.senderName.trim());
+  params.set('title', content.headline.trim());
+  params.set('msg', content.bodyText.trim());
+  if (content.postscript.trim()) {
+    params.set('ps', content.postscript.trim());
+  }
+  return params.toString();
+}
+
+/**
+ * Parses customized letter content from URL search parameters if present and valid.
+ */
+export function parseLetterFromQueryParams(
+  search: string,
+  fallback: LetterContent = DEFAULT_LETTER_CONTENT
+): LetterContent {
+  if (!search) return fallback;
+  const params = new URLSearchParams(search);
+  const to = params.get('to');
+  const from = params.get('from');
+  const title = params.get('title');
+  const msg = params.get('msg');
+  const ps = params.get('ps');
+
+  if (!to && !from && !title && !msg) {
+    return fallback;
+  }
+
+  const candidate: LetterContent = {
+    recipientName: to?.trim() || fallback.recipientName,
+    senderName: from?.trim() || fallback.senderName,
+    headline: title?.trim() || fallback.headline,
+    bodyText: msg?.trim() || fallback.bodyText,
+    postscript: ps !== null ? ps.trim() : fallback.postscript,
+  };
+
+  const check = validateLetterContent(candidate);
+  return check.valid ? candidate : fallback;
+}
+

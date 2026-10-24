@@ -12,6 +12,7 @@ import {
   computeHeartBounce,
   computeFlyingLetterPose,
   groundHeightAt,
+  getResponsiveCameraPreset,
 } from '../utils/sceneState';
 import {
   createPixelMeadowTextures,
@@ -819,6 +820,7 @@ export const RetroFarmCanvas: React.FC<RetroFarmCanvasProps> = ({
       camera.aspect = newW / newH;
       camera.updateProjectionMatrix();
       renderer.setSize(newW, newH);
+      cameraTransitionActiveRef.current = true;
     };
     window.addEventListener('resize', handleResize);
 
@@ -855,7 +857,10 @@ export const RetroFarmCanvas: React.FC<RetroFarmCanvasProps> = ({
       lastTimeMs = nowMs;
       elapsed += dt;
       const currentScene = activeSceneRef.current;
-      const targetPreset = SCENE_PRESETS[currentScene];
+      const targetPreset = getResponsiveCameraPreset(
+        SCENE_PRESETS[currentScene],
+        camera.aspect
+      );
       const lightPreset = TIME_OF_DAY_PRESETS[timeOfDayRef.current];
       const isCelebration = proposalAcceptedRef.current;
 

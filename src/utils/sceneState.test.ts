@@ -11,6 +11,9 @@ import {
   validateLetterContent,
   DEFAULT_LETTER_CONTENT,
   groundHeightAt,
+  getResponsiveCameraPreset,
+  encodeLetterToQueryParams,
+  parseLetterFromQueryParams,
 } from './sceneState';
 
 test('scene navigation cycles forward and backward smoothly across all 4 scenes', () => {
@@ -80,3 +83,26 @@ test('groundHeightAt returns finite height across farm and stream coordinates', 
   assert.ok(Number.isFinite(streamH));
   assert.ok(streamH < farmH);
 });
+
+test('getResponsiveCameraPreset pulls camera back on portrait mobile aspect ratios', () => {
+  const desktopCam = getResponsiveCameraPreset(SCENE_PRESETS.proposal, 1440 / 900);
+  const mobileCam = getResponsiveCameraPreset(SCENE_PRESETS.proposal, 390 / 844);
+
+  assert.equal(desktopCam.cameraPos.z, SCENE_PRESETS.proposal.cameraPos.z);
+  assert.ok(mobileCam.cameraPos.z > desktopCam.cameraPos.z);
+  assert.ok(mobileCam.fov > desktopCam.fov);
+});
+
+test('encodeLetterToQueryParams and parseLetterFromQueryParams round-trip custom letter', () => {
+  const custom = {
+    recipientName: 'Mariana',
+    senderName: 'Diego',
+    headline: 'Quer namorar comigo, Mari?',
+    bodyText: 'Cada momento ao seu lado é mágico como este campo de flores.',
+    postscript: 'Para sempre nós dois.',
+  };
+  const query = encodeLetterToQueryParams(custom);
+  const parsed = parseLetterFromQueryParams(`?${query}`);
+  assert.deepEqual(parsed, custom);
+});
+
