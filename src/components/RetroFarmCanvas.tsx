@@ -27,6 +27,8 @@ import {
   createWindmillGroup,
   createCottageGroup,
   createBlossomTreeWithSwing,
+  createTrampolineGroup,
+  createFruitTreeGroup,
   createVoxelSheep,
   createWoodenBridge,
   createFlyingLoveLetter,
@@ -405,7 +407,7 @@ export const RetroFarmCanvas: React.FC<RetroFarmCanvasProps> = ({
     // 7. Assemble Composite 3D Landmarks & Interactables
     const interactables: THREE.Object3D[] = [];
 
-    // Landmark A: Red Pixel-Art Barn & Silo (Left Farm Zone)
+    // Landmark A: Red Pixel-Art Barn & Silo (Farmstead Backdrop Ridge)
     const barnGroup = createPixelBarnGroup(
       redWoodMat,
       roofMat,
@@ -415,10 +417,10 @@ export const RetroFarmCanvas: React.FC<RetroFarmCanvasProps> = ({
       hayMat,
       contactShadowTex
     );
-    const barnX = -11.5;
-    const barnZ = -3.8;
+    const barnX = -15.5;
+    const barnZ = -8.8;
     barnGroup.position.set(barnX, groundHeightAt(barnX, barnZ), barnZ);
-    barnGroup.rotation.y = 0.32;
+    barnGroup.rotation.y = 0.35;
     barnGroup.userData = { targetScene: 'farm' as SceneId };
     scene.add(barnGroup);
     interactables.push(barnGroup);
@@ -432,33 +434,103 @@ export const RetroFarmCanvas: React.FC<RetroFarmCanvasProps> = ({
       metalDomeMat,
       contactShadowTex
     );
-    const millX = -16.2;
-    const millZ = 4.2;
+    const millX = -18.8;
+    const millZ = -1.5;
     windmillGroup.position.set(millX, groundHeightAt(millX, millZ), millZ);
     windmillGroup.rotation.y = 0.55;
     windmillGroup.userData = { targetScene: 'farm' as SceneId };
     scene.add(windmillGroup);
     interactables.push(windmillGroup);
 
-    // Landmark C: Cozy Farmhouse Cottage & Waterwheel near the Stream
-    const { group: cottageGroup, waterwheel } = createCottageGroup(
+    // Landmark C: Cozy Farmhouse Cottage with Covered Porch (Alpendre), Toys & Waterwheel
+    const {
+      group: cottageGroup,
+      waterwheel,
+      rockingHorsePivot,
+    } = createCottageGroup(
       plasterMat,
       oakWoodMat,
+      darkWoodMat,
       roofMat,
       stoneMat,
       windowGlowMat,
+      whiteTrimMat,
       contactShadowTex
     );
-    const cotX = -3.2;
-    const cotZ = -8.5;
+    const cotX = -4.8;
+    const cotZ = -2.2;
     cottageGroup.position.set(cotX, groundHeightAt(cotX, cotZ), cotZ);
-    cottageGroup.rotation.y = 0.15;
+    cottageGroup.rotation.y = 0.06;
     cottageGroup.userData = { targetScene: 'farm' as SceneId };
     scene.add(cottageGroup);
+    interactables.push(cottageGroup);
+
+    // Landmark C2: Backyard Trampoline (Pula-Pula no Quintal)
+    const {
+      group: trampolineGroup,
+      jumperGroup: trampolineJumper,
+      jumpMatMesh: trampolineMatMesh,
+    } = createTrampolineGroup(metalDomeMat, contactShadowTex);
+    const trampX = -9.2;
+    const trampZ = 2.0;
+    trampolineGroup.position.set(trampX, groundHeightAt(trampX, trampZ), trampZ);
+    trampolineGroup.userData = { targetScene: 'farm' as SceneId };
+    scene.add(trampolineGroup);
+    interactables.push(trampolineGroup);
+
+    // Landmark C3: Backyard Fruit Tree with Apples, Oranges & Fruit Basket (Árvore de Frutas no Quintal)
+    const fruitTreeGroup = createFruitTreeGroup(
+      darkWoodMat,
+      oakWoodMat,
+      contactShadowTex
+    );
+    const fruitTreeX = -9.8;
+    const fruitTreeZ = -3.4;
+    fruitTreeGroup.position.set(
+      fruitTreeX,
+      groundHeightAt(fruitTreeX, fruitTreeZ),
+      fruitTreeZ
+    );
+    fruitTreeGroup.rotation.y = 0.4;
+    fruitTreeGroup.userData = { targetScene: 'farm' as SceneId };
+    scene.add(fruitTreeGroup);
+    interactables.push(fruitTreeGroup);
+
+    // Landmark C4: Backyard Tree with Wooden Swing (Árvore com Balanço no Quintal)
+    const yardLeafMat1 = new THREE.MeshStandardMaterial({
+      color: 0x4caf50,
+      roughness: 0.72,
+      metalness: 0.02,
+    });
+    const yardLeafMat2 = new THREE.MeshStandardMaterial({
+      color: 0x66bb6a,
+      roughness: 0.7,
+      metalness: 0.02,
+    });
+    const { group: yardSwingTreeGroup, swingPivot: yardSwingPivot } =
+      createBlossomTreeWithSwing(
+        darkWoodMat,
+        yardLeafMat1,
+        yardLeafMat2,
+        oakWoodMat,
+        hayMat,
+        contactShadowTex
+      );
+    const yardSwingX = 0.4;
+    const yardSwingZ = -0.2;
+    yardSwingTreeGroup.position.set(
+      yardSwingX,
+      groundHeightAt(yardSwingX, yardSwingZ),
+      yardSwingZ
+    );
+    yardSwingTreeGroup.rotation.y = 0.12;
+    yardSwingTreeGroup.userData = { targetScene: 'farm' as SceneId };
+    scene.add(yardSwingTreeGroup);
+    interactables.push(yardSwingTreeGroup);
 
     // Landmark D: Arched Wooden Bridge Crossing the Stream
     const bridgeGroup = createWoodenBridge(oakWoodMat, darkWoodMat);
-    bridgeGroup.position.set(2.5, groundHeightAt(2.5, 2.0) + 0.15, 2.0);
+    bridgeGroup.position.set(2.5, groundHeightAt(2.5, 3.2) + 0.15, 3.2);
     scene.add(bridgeGroup);
 
     // Landmark E: Blossoming Cherry Tree with Swaying Swing (Right Flower Field Zone)
@@ -965,10 +1037,18 @@ export const RetroFarmCanvas: React.FC<RetroFarmCanvasProps> = ({
         dt
       );
 
-      // C. Animate Farm Windmill, Waterwheel, Tree Swing & Grazing Sheep
+      // C. Animate Farm Windmill, Waterwheel, Tree Swings, Porch Rocking Horse, Trampoline & Sheep
       rotorGroup.rotation.z = -elapsed * 0.85;
       waterwheel.rotation.x = elapsed * 1.1;
-      swingPivot.rotation.x = Math.sin(elapsed * 1.6) * 0.18;
+      swingPivot.rotation.x = Math.sin(elapsed * 1.6) * 0.22;
+      yardSwingPivot.rotation.x = Math.sin(elapsed * 1.85 + 0.5) * 0.26;
+      rockingHorsePivot.rotation.x = Math.sin(elapsed * 3.1) * 0.18;
+
+      // Bouncing plush bear on the backyard trampoline + elastic mat flex
+      const trampSin = Math.abs(Math.sin(elapsed * 3.6));
+      trampolineJumper.position.y = 0.82 + Math.pow(trampSin, 0.75) * 1.05;
+      trampolineJumper.rotation.y = elapsed * 0.9;
+      trampolineMatMesh.position.y = 0.76 - (1 - trampSin) * 0.08;
 
       sheepGroupList.forEach((s) => {
         const hop = Math.max(0, Math.sin(elapsed * 2.4 + s.phase)) * 0.14;

@@ -66,14 +66,14 @@ export const SCENE_PRESETS: Record<SceneId, ScenePreset> = {
   farm: {
     id: 'farm',
     index: 1,
-    label: '01. Fazenda Pixel Art',
-    shortLabel: '01. Fazenda',
-    subtitle: 'Onde tudo floresce com calma e carinho',
+    label: '01. Casinha, Alpendre & Quintal',
+    shortLabel: '01. Quintal',
+    subtitle: 'Casinha com alpendre de brinquedos, pula-pula, árvore de frutas e balanço',
     poeticLine:
-      'Entre o moinho girando ao vento suave, o celeiro acolhedor e o riacho cristalino, cada cantinho guarda um pedaço do nosso sonho.',
-    cameraPos: { x: -18, y: 11.5, z: 24 },
-    cameraTarget: { x: -4, y: 2.8, z: -2 },
-    fov: 44,
+      'Na varanda com brinquedos, entre o pula-pula divertido, a árvore carregada de frutas e o balanço à sombra, mora o nosso futuro.',
+    cameraPos: { x: -4.8, y: 5.6, z: 11.2 },
+    cameraTarget: { x: -4.8, y: 1.9, z: -0.4 },
+    fov: 45,
   },
   flower_field: {
     id: 'flower_field',
