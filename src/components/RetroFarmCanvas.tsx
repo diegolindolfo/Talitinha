@@ -457,10 +457,10 @@ export const RetroFarmCanvas: React.FC<RetroFarmCanvasProps> = ({
       whiteTrimMat,
       contactShadowTex
     );
-    const cotX = -4.8;
-    const cotZ = -2.2;
+    const cotX = -4.5;
+    const cotZ = -2.6;
     cottageGroup.position.set(cotX, groundHeightAt(cotX, cotZ), cotZ);
-    cottageGroup.rotation.y = 0.06;
+    cottageGroup.rotation.y = 0.14;
     cottageGroup.userData = { targetScene: 'farm' as SceneId };
     scene.add(cottageGroup);
     interactables.push(cottageGroup);
@@ -471,8 +471,8 @@ export const RetroFarmCanvas: React.FC<RetroFarmCanvasProps> = ({
       jumperGroup: trampolineJumper,
       jumpMatMesh: trampolineMatMesh,
     } = createTrampolineGroup(metalDomeMat, contactShadowTex);
-    const trampX = -9.2;
-    const trampZ = 2.0;
+    const trampX = -8.6;
+    const trampZ = 1.4;
     trampolineGroup.position.set(trampX, groundHeightAt(trampX, trampZ), trampZ);
     trampolineGroup.userData = { targetScene: 'farm' as SceneId };
     scene.add(trampolineGroup);
@@ -484,14 +484,14 @@ export const RetroFarmCanvas: React.FC<RetroFarmCanvasProps> = ({
       oakWoodMat,
       contactShadowTex
     );
-    const fruitTreeX = -9.8;
-    const fruitTreeZ = -3.4;
+    const fruitTreeX = -9.2;
+    const fruitTreeZ = -3.8;
     fruitTreeGroup.position.set(
       fruitTreeX,
       groundHeightAt(fruitTreeX, fruitTreeZ),
       fruitTreeZ
     );
-    fruitTreeGroup.rotation.y = 0.4;
+    fruitTreeGroup.rotation.y = 0.45;
     fruitTreeGroup.userData = { targetScene: 'farm' as SceneId };
     scene.add(fruitTreeGroup);
     interactables.push(fruitTreeGroup);
@@ -516,14 +516,14 @@ export const RetroFarmCanvas: React.FC<RetroFarmCanvasProps> = ({
         hayMat,
         contactShadowTex
       );
-    const yardSwingX = 0.4;
-    const yardSwingZ = -0.2;
+    const yardSwingX = -1.6;
+    const yardSwingZ = -2.4;
     yardSwingTreeGroup.position.set(
       yardSwingX,
       groundHeightAt(yardSwingX, yardSwingZ),
       yardSwingZ
     );
-    yardSwingTreeGroup.rotation.y = 0.12;
+    yardSwingTreeGroup.rotation.y = 0.25;
     yardSwingTreeGroup.userData = { targetScene: 'farm' as SceneId };
     scene.add(yardSwingTreeGroup);
     interactables.push(yardSwingTreeGroup);
@@ -697,6 +697,22 @@ export const RetroFarmCanvas: React.FC<RetroFarmCanvasProps> = ({
         if (fx > -15 && fx < -7 && fz > -7 && fz < 0) {
           fx += 9.5;
         }
+        // Avoid placing inside cottage body, porch deck, steps, and front walk
+        if (fx > -5.8 && fx < -1.8 && fz > -4.8 && fz < 1.6) {
+          fx += 5.2;
+        }
+        // Avoid placing inside trampoline mat & safety perimeter
+        if (Math.hypot(fx - trampX, fz - trampZ) < 2.5) {
+          fz += 3.2;
+        }
+        // Avoid placing under fruit tree trunk & fruit harvest crate
+        if (Math.hypot(fx - fruitTreeX, fz - fruitTreeZ) < 2.2) {
+          fx -= 2.6;
+        }
+        // Avoid placing under yard swing tree base
+        if (Math.hypot(fx - yardSwingX, fz - yardSwingZ) < 2.0) {
+          fx += 2.4;
+        }
       }
 
       const fy = groundHeightAt(fx, fz);
@@ -758,16 +774,17 @@ export const RetroFarmCanvas: React.FC<RetroFarmCanvasProps> = ({
       let speed = 2.6;
       const phase = (i * 0.73) % (Math.PI * 2);
       const orbitAngle = (i / 18) * Math.PI * 2;
-      const orbitRadius = 3.2 + (i % 3) * 0.85;
+      const orbitRadius = 2.6 + (i % 3) * 0.8;
 
       if (isForegroundRing) {
-        // Hearts dancing around the flying love letter and flower valley
-        baseX = Math.cos(orbitAngle) * orbitRadius;
-        baseZ = 1.5 + Math.sin(orbitAngle) * orbitRadius;
-        baseY = Math.max(1.2, groundHeightAt(baseX, baseZ) + 1.25 + (i % 4) * 0.55);
-        scale = 0.65 + (i % 3) * 0.2;
-        amplitude = 1.15 + (i % 3) * 0.35;
-        speed = 2.8 + (i % 4) * 0.35;
+        // Foreground celebration hearts placed over the stream valley and around letter,
+        // offset towards x > 1.2 so they never block the cottage porch, toys, or yard props
+        baseX = 1.4 + Math.cos(orbitAngle) * orbitRadius;
+        baseZ = 1.8 + Math.sin(orbitAngle) * (orbitRadius * 0.85);
+        baseY = Math.max(1.3, groundHeightAt(baseX, baseZ) + 1.25 + (i % 4) * 0.45);
+        scale = 0.65 + (i % 3) * 0.18;
+        amplitude = 1.1 + (i % 3) * 0.3;
+        speed = 2.6 + (i % 4) * 0.35;
       } else {
         // Bouncing 3D Pixel Hearts across the scenic background & meadow horizon!
         const idx = i - 18;

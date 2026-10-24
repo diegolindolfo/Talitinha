@@ -117,6 +117,50 @@ export default function App() {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [handleNextScene, handlePrevScene, isLetterModalOpen]);
 
+  // Mobile Touch Swipe Gesture Support (Swipe left for Next Scene, Swipe right for Prev Scene)
+  useEffect(() => {
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchStartTime = 0;
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        touchStartTime = Date.now();
+      }
+    };
+
+    const onTouchEnd = (e: TouchEvent) => {
+      if (isLetterModalOpen || e.changedTouches.length !== 1) return;
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+      const deltaX = touchEndX - touchStartX;
+      const deltaY = touchEndY - touchStartY;
+      const deltaTime = Date.now() - touchStartTime;
+
+      // Only trigger if horizontal swipe is decisive and within 600ms
+      if (
+        deltaTime < 600 &&
+        Math.abs(deltaX) > 48 &&
+        Math.abs(deltaX) > Math.abs(deltaY) * 1.5
+      ) {
+        if (deltaX < 0) {
+          handleNextScene();
+        } else {
+          handlePrevScene();
+        }
+      }
+    };
+
+    window.addEventListener('touchstart', onTouchStart, { passive: true });
+    window.addEventListener('touchend', onTouchEnd, { passive: true });
+    return () => {
+      window.removeEventListener('touchstart', onTouchStart);
+      window.removeEventListener('touchend', onTouchEnd);
+    };
+  }, [handleNextScene, handlePrevScene, isLetterModalOpen]);
+
   return (
     <main className="relative w-screen h-screen overflow-hidden select-none">
       {/* Full-Bleed 3D Pixel Art Viewport */}
@@ -129,12 +173,12 @@ export default function App() {
         onOpenLetterModal={handleOpenLetterModal}
       />
 
-      {/* Minimal Top-Left Story & Scene Card (Compact on Mobile to respect 15% Sticky Cap) */}
+      {/* Minimal Top-Left Story & Scene Card (Compact on Mobile to prevent obstruction) */}
       {!isDockCollapsed && (
         <section
           aria-label="História da Cena Atual"
-          className="fixed top-3 left-3 right-3 sm:right-auto sm:top-4 sm:left-4 z-10 sm:max-w-md rounded-xl border-2 border-[#5c3d46] px-3.5 py-2.5 sm:px-4 sm:py-3.5 text-[#fff8f0] shadow-xl pointer-events-auto flex sm:block items-center justify-between gap-3"
-          style={{ backgroundColor: 'rgba(33, 23, 36, 0.92)' }}
+          className="fixed top-2.5 left-2.5 right-2.5 sm:right-auto sm:top-4 sm:left-4 z-10 sm:max-w-md rounded-xl border-2 border-[#5c3d46] px-3 py-2 sm:px-4 sm:py-3.5 text-[#fff8f0] shadow-xl pointer-events-auto flex sm:block items-center justify-between gap-2.5"
+          style={{ backgroundColor: 'rgba(33, 23, 36, 0.94)' }}
         >
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-medium text-[#ffb3c6]">

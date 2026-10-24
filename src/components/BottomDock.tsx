@@ -162,7 +162,8 @@ export const BottomDock: React.FC<BottomDockProps> = ({
                 className="inline-flex items-center gap-1 px-2.5 sm:px-3 py-1.5 min-h-[34px] text-xs font-semibold rounded-lg border border-[#5c3d46] bg-[#2e2032] text-[#ffebd6] hover:bg-[#3d2b42] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <Edit3 className="w-3.5 h-3.5 text-[#ffb3c6]" />
-                <span>Editar Carta</span>
+                <span className="hidden sm:inline">Editar Carta</span>
+                <span className="sm:hidden">Editar</span>
               </button>
 
               <button

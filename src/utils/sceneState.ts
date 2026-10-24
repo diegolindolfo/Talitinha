@@ -23,6 +23,7 @@ export interface ScenePreset {
 export interface TimeOfDayPreset {
   id: TimeOfDayId;
   label: string;
+  shortLabel: string;
   skyTopHex: number;
   skyHorizonHex: number;
   fogHex: number;
@@ -71,9 +72,9 @@ export const SCENE_PRESETS: Record<SceneId, ScenePreset> = {
     subtitle: 'Casinha com alpendre de brinquedos, pula-pula, árvore de frutas e balanço',
     poeticLine:
       'Na varanda com brinquedos, entre o pula-pula divertido, a árvore carregada de frutas e o balanço à sombra, mora o nosso futuro.',
-    cameraPos: { x: -4.8, y: 5.6, z: 11.2 },
-    cameraTarget: { x: -4.8, y: 1.9, z: -0.4 },
-    fov: 45,
+    cameraPos: { x: -5.0, y: 5.5, z: 11.5 },
+    cameraTarget: { x: -5.0, y: 1.8, z: -1.8 },
+    fov: 44,
   },
   flower_field: {
     id: 'flower_field',
@@ -83,8 +84,8 @@ export const SCENE_PRESETS: Record<SceneId, ScenePreset> = {
     subtitle: 'Um mar de pétalas coloridas dançando na brisa',
     poeticLine:
       'Sob a grande cerejeira em flor e o balanço de madeira, centenas de flores pixeladas se inclinam enquanto corações saltitam no horizonte.',
-    cameraPos: { x: 15.5, y: 4.8, z: 11.5 },
-    cameraTarget: { x: 9.5, y: 2.6, z: -2.5 },
+    cameraPos: { x: 13.8, y: 4.8, z: 10.8 },
+    cameraTarget: { x: 8.8, y: 2.3, z: -2.0 },
     fov: 42,
   },
   flying_letter: {
@@ -95,8 +96,8 @@ export const SCENE_PRESETS: Record<SceneId, ScenePreset> = {
     subtitle: 'Trazida pelo vento com um pedido especial',
     poeticLine:
       'Balançando suavemente entre nuvens douradas e corações saltitantes, a carta voa aberta revelando o pedido escrito com carinho.',
-    cameraPos: { x: 0.4, y: 5.2, z: 7.8 },
-    cameraTarget: { x: 0.2, y: 4.75, z: 1.5 },
+    cameraPos: { x: 0.0, y: 5.0, z: 7.2 },
+    cameraTarget: { x: 0.0, y: 4.5, z: 1.5 },
     fov: 38,
   },
   proposal: {
@@ -107,8 +108,8 @@ export const SCENE_PRESETS: Record<SceneId, ScenePreset> = {
     subtitle: 'Uma pergunta escrita com todo o meu coração',
     poeticLine:
       'O selo se abre, os corações celebram ao redor do vale e a pergunta mais importante finalmente pousa em suas mãos.',
-    cameraPos: { x: 0.25, y: 4.95, z: 5.5 },
-    cameraTarget: { x: 0.15, y: 4.75, z: 1.6 },
+    cameraPos: { x: 0.0, y: 4.75, z: 5.8 },
+    cameraTarget: { x: 0.0, y: 4.4, z: 1.6 },
     fov: 36,
   },
 };
@@ -117,6 +118,7 @@ export const TIME_OF_DAY_PRESETS: Record<TimeOfDayId, TimeOfDayPreset> = {
   golden_sunset: {
     id: 'golden_sunset',
     label: 'Pôr do Sol Romântico',
+    shortLabel: 'Pôr do Sol',
     skyTopHex: 0x3b2d54,
     skyHorizonHex: 0xf4976c,
     fogHex: 0xf29f79,
@@ -133,6 +135,7 @@ export const TIME_OF_DAY_PRESETS: Record<TimeOfDayId, TimeOfDayPreset> = {
   sunny_meadow: {
     id: 'sunny_meadow',
     label: 'Manhã Ensolarada',
+    shortLabel: 'Manhã',
     skyTopHex: 0x4ea8de,
     skyHorizonHex: 0xbde0fe,
     fogHex: 0xc8e7ff,
@@ -149,6 +152,7 @@ export const TIME_OF_DAY_PRESETS: Record<TimeOfDayId, TimeOfDayPreset> = {
   pastel_dawn: {
     id: 'pastel_dawn',
     label: 'Aurora Pastel',
+    shortLabel: 'Aurora',
     skyTopHex: 0x6d597a,
     skyHorizonHex: 0xffcad4,
     fogHex: 0xfcd5ce,
@@ -165,6 +169,7 @@ export const TIME_OF_DAY_PRESETS: Record<TimeOfDayId, TimeOfDayPreset> = {
   starry_night: {
     id: 'starry_night',
     label: 'Noite Estrelada',
+    shortLabel: 'Noite',
     skyTopHex: 0x101426,
     skyHorizonHex: 0x262b47,
     fogHex: 0x1e2238,
@@ -364,22 +369,36 @@ export function getResponsiveCameraPreset(
     };
   }
 
-  // Portrait mobile factor (e.g. 390/844 = 0.46 -> factor ~ 1.45)
-  const clampedAspect = Math.max(0.4, aspect);
-  const pullBackFactor = Math.min(1.65, 1 / Math.pow(clampedAspect, 0.55));
+  // Portrait mobile factor (e.g. 390/844 = 0.462 -> pullBackFactor ~ 1.55 - 1.85)
+  const clampedAspect = Math.max(0.40, aspect);
+  const isProposal = preset.id === 'proposal';
+  const isLetter = preset.id === 'flying_letter';
+
+  // Proposal letter and flying letter need higher pullBack to prevent horizontal clipping of parchment
+  const exponent = isProposal ? 0.68 : isLetter ? 0.62 : 0.52;
+  const maxFactor = isProposal ? 1.88 : isLetter ? 1.75 : 1.62;
+  const pullBackFactor = Math.min(maxFactor, 1 / Math.pow(clampedAspect, exponent));
 
   const dx = preset.cameraPos.x - preset.cameraTarget.x;
   const dy = preset.cameraPos.y - preset.cameraTarget.y;
   const dz = preset.cameraPos.z - preset.cameraTarget.z;
 
+  // On portrait mobile, raise camera target slightly so 3D elements sit
+  // cleanly in the optical center between top story card and bottom navigation dock
+  const verticalTargetOffset = isProposal ? 0.12 : 0.25;
+
   return {
     cameraPos: {
       x: preset.cameraTarget.x + dx * pullBackFactor,
-      y: preset.cameraTarget.y + dy * (1 + (pullBackFactor - 1) * 0.45),
+      y: preset.cameraTarget.y + dy * (1 + (pullBackFactor - 1) * 0.32) + verticalTargetOffset * 0.4,
       z: preset.cameraTarget.z + dz * pullBackFactor,
     },
-    cameraTarget: { ...preset.cameraTarget },
-    fov: Math.min(56, preset.fov * (1 + (1 - clampedAspect) * 0.35)),
+    cameraTarget: {
+      x: preset.cameraTarget.x,
+      y: preset.cameraTarget.y + verticalTargetOffset,
+      z: preset.cameraTarget.z,
+    },
+    fov: Math.min(52, preset.fov * (1 + (1 - clampedAspect) * 0.24)),
   };
 }
 
